@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  webserver:
+    image: php:7.2-apache
+    container_name: 'apachephp72'
+    build: .
+    ports:
+    - '80:80'
+    - '443:443'
+    environment:
+      PHP_MAX_EXECUTION_TIME: 250
+      PHP_UPLOAD_MAX_FILESIZE: 1024M
+      PHP_POST_MAX_SIZE: 756M
+      PHP_ALLOW_URL_FOPEN: "On"
+      PHP_MEMORY_LIMIT: 1024M
+      ALLOW_OVERRIDE: "true"
+    volumes:
+    - ${DOCUMENT_ROOT-./htdocs}:/var/www/html
+    links:
+    - mysql
+
+  mysql:
+    image: mariadb:10.3
+    container_name: 'mariadb10'
+    ports:
+    - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+    - ${DOCUMENT_ROOT-./databases}:/var/lib/mysql
+    - ${DOCUMENT_ROOT-./sockets/mariadb}:/var/run/mysqld
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_520_ci']
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: 'phpmyadmin'
+    links:
+    - mysql
+    depends_on:
+    - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+      PHP_UPLOAD_MAX_FILESIZE: 1G
+      PHP_MAX_INPUT_VARS: 1G
+    ports:
+    - '8080:80'
